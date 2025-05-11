@@ -31,7 +31,7 @@ func main() {
 	// Routes
 	r.GET("/api/todos", func(c *gin.Context) {
 		var todos []models.Todo
-		db.Order("`order` asc").Find(&todos)
+		db.Find(&todos)
 		c.JSON(200, todos)
 	})
 
@@ -41,32 +41,8 @@ func main() {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
 		}
-
-		// Set the order to be the last item
-		var count int64
-		db.Model(&models.Todo{}).Count(&count)
-		todo.Order = int(count)
-
 		db.Create(&todo)
 		c.JSON(201, todo)
-	})
-
-	r.PUT("/api/todos/reorder", func(c *gin.Context) {
-		var reorderRequest struct {
-			TodoIDs []uint `json:"todoIds"`
-		}
-
-		if err := c.ShouldBindJSON(&reorderRequest); err != nil {
-			c.JSON(400, gin.H{"error": err.Error()})
-			return
-		}
-
-		// Update the order of each todo
-		for i, id := range reorderRequest.TodoIDs {
-			db.Model(&models.Todo{}).Where("id = ?", id).Update("order", i)
-		}
-
-		c.JSON(200, gin.H{"message": "Todos reordered successfully"})
 	})
 
 	r.DELETE("/api/todos/:id", func(c *gin.Context) {
