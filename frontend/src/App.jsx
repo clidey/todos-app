@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, Reorder } from 'framer-motion'
 import { PlusIcon, TrashIcon } from '@heroicons/react/24/outline'
 import axios from 'axios'
 
@@ -45,6 +45,17 @@ function App() {
     }
   }
 
+  const handleReorder = async (newTodos) => {
+    setTodos(newTodos)
+    try {
+      await axios.put('http://localhost:8080/api/todos/reorder', {
+        todoIds: newTodos.map(todo => todo.id)
+      })
+    } catch (error) {
+      console.error('Error reordering todos:', error)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
       <div className="container mx-auto px-4 py-16">
@@ -53,7 +64,7 @@ function App() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-2xl mx-auto"
         >
-          <h1 className="text-4xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-orange-500 animate-gradient">
+          <h1 className="text-4xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 animate-gradient">
             Futuristic Todo List
           </h1>
 
@@ -76,14 +87,17 @@ function App() {
             </div>
           </form>
 
-          <div className="space-y-4">
+          <Reorder.Group axis="y" values={todos} onReorder={handleReorder} className="space-y-4">
             {todos.map((todo) => (
-              <motion.div
+              <Reorder.Item
                 key={todo.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 flex items-center justify-between group hover:bg-gray-800/70 transition-all"
+                value={todo}
+                className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-4 flex items-center justify-between group hover:bg-gray-800/70 transition-all cursor-move"
+                whileDrag={{
+                  scale: 1.03,
+                  boxShadow: "0 10px 30px rgba(0,0,0,0.3)",
+                  backgroundColor: "rgba(31, 41, 55, 0.8)"
+                }}
               >
                 <span className="text-lg">{todo.title}</span>
                 <button
@@ -92,9 +106,9 @@ function App() {
                 >
                   <TrashIcon className="w-5 h-5" />
                 </button>
-              </motion.div>
+              </Reorder.Item>
             ))}
-          </div>
+          </Reorder.Group>
         </motion.div>
       </div>
     </div>
